@@ -13,6 +13,9 @@ socket.setdefaulttimeout(20)
 # base MegaVideo url string
 baseMegavideoUrl = "http://www.megavideo.com/?v="
 
+# output limit
+outputLimit = 99
+
 # ----------- Logger --------------------------------------------------------------------------------
 
 # Logger
@@ -32,7 +35,7 @@ log.addHandler(ch)
 
 def checkIfAvailableOnMV(megaVideoUrl):
 
-	log.debug("Checking link %s for existence on %s"%(megaVideoUrl, baseMegavideoUrl))
+	log.debug("Checking link %s for existence on MegaVideo"%(megaVideoUrl))
 	
 	# checks whether the video is not removed from MV
 	# 0 -> video available
@@ -45,7 +48,7 @@ def checkIfAvailableOnMV(megaVideoUrl):
 		f = urllib.urlopen(megaVideoUrl)
 		readFile = f.read()
 	except:
-		log.error("Unable to access MegaVideo server (maybe you are offline?)")
+		log.error("Unable to access provided URL (maybe you are offline or misspelled the url?)")
 		return -1
 	f.close()
 	
@@ -76,15 +79,19 @@ def usage():
 	print("Other options:")
 	print("-d\tDebug info")
 	print("-v\tVerbose (still less thank DEBUG)")
+	print("-l N\tLimit the output to the first N found links (>=1!)")
 	print("")
 	print("If you supply the megavideocode, the url will be formatted")
 	print("as %sXXXXX."%baseMegavideoUrl)
+	print("")
+	print("If you do not use v (verbose) or d (debug), the tool only prints")
+	print("out the found url(s) (or the supplied url if this is valid)")
 	print("")
 
 megaVideoUrl = ""
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:], "hu:c:vd")
+	opts, args = getopt.getopt(sys.argv[1:], "hu:c:vdl:")
 except getopt.GetoptError:
 	usage()
 	sys.exit(0)
@@ -104,12 +111,26 @@ for o,a in opts:
 	elif o == "-d":
 		log.setLevel(logging.DEBUG)
 		ch.setLevel(logging.DEBUG)
+	elif o == "-l":
+		outputLimit = a
 
 if (len(megaVideoUrl) == 0):
 	usage()
 	print("You need to provide an url or a MegaVideo code.\n")
 	sys.exit(0)
 
+try:
+	outputLimit = int(outputLimit)
+except:
+	usage()
+	print("If you use the -l option you must provide a valid integer.\n")
+	sys.exit(0)
+
+if outputLimit < 1:
+	usage()
+	print("If you use the -l option you must provide a valid integer >= 1.\n")
+	sys.exit(0)	
+	
 # -------------------------------------------------------------------------------------------
 
 # checks whether the url is available on MegaVideo
@@ -180,5 +201,8 @@ for regenUrl in regenUrls:
 
 log.info("Found %i alternative links."%len(newUrls))
 
-for newLink in newUrls:
+if (len(newUrls) > outputLimit):
+	log.info("Limiting results to first %i value(s) (see -l option)."%outputLimit)
+
+for newLink in newUrls[0:outputLimit]:
 	print(newLink)
