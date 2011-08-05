@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import urllib, string, sys, re, getopt, socket
 
 version = "1.0"
@@ -23,23 +25,15 @@ def checkIfAvailableOnMV(megaVideoUrl):
 	
 	#searches for a predefined error string
 	errorString = "has been removed due to infringement"
-	found = 0
 	for line in string.split(readFile, "\n"):
 		if string.find(line, errorString) != -1:
-			found = 1
-			break	
-	if (found == 1):
-		return 1
+			return 1
 
 	#searches for a predefined error string
 	errorString = "This video is unavailable"
-	found = 0
 	for line in string.split(readFile, "\n"):
 		if string.find(line, errorString) != -1:
-			found = 1
-			break	
-	if (found == 1):
-		return 2	
+			return 2
 
 	return 0
 
