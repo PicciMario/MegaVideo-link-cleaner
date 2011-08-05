@@ -1,2 +1,16 @@
-MegaVideo Link Cleaner
-PicciMario <mario.piccinelli@gmail.com>
+Megavideo Link Cleaner
+Version 1.0 by PicciMario <mario.piccinelli@gmail.com>
+Released under MIT license. Enjoy!
+
+Usage: regen.py [-u megavideourl | -c megavideocode]
+
+Other options:
+-d	Debug info
+-v	Verbose (still less thank DEBUG)
+-l N	Limit the output to the first N found links (>=1!)
+
+If you supply the megavideocode, the url will be formatted
+as http://www.megavideo.com/?v=XXXXX.
+
+If you do not use v (verbose) or d (debug), the tool only prints
+out the found url(s) (or the supplied url if this is valid)
