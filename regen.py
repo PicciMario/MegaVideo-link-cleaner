@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import urllib, string, sys, re, getopt, socket
 
 version = "1.0"
