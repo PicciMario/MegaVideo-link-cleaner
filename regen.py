@@ -2,9 +2,18 @@
 
 import urllib, string, sys, re, getopt, socket
 
+# ----------- Globals ----------------------------------------------------------------------
+
+# version string
 version = "1.0"
 
+# socket default timeout
 socket.setdefaulttimeout(20)
+
+# base MegaVideo url string
+baseMegavideoUrl = "http://www.megavideo.com/?v="
+
+# ----------- Checks if the provided URL is an available MegaVideo video -------------------
 
 def checkIfAvailableOnMV(megaVideoUrl):
 	
@@ -38,19 +47,23 @@ def checkIfAvailableOnMV(megaVideoUrl):
 	return 0
 
 # ----------- Command Line Parameters ---------------------------------------------------------------
+
 def usage():
 	print("")
-	print("Megavideo link cleaner")
-	print("Version %s"%version)
-	print("by PicciMario <mario.piccinelli@gmail.com>")
-	print("released under MIT license. Enjoy!")
-	print("Usage: regen.py -u megavideourl")
+	print("Megavideo Link Cleaner")
+	print("Version %s by PicciMario <mario.piccinelli@gmail.com>"%version)
+	print("Released under MIT license. Enjoy!")
+	print("")
+	print("Usage: regen.py [-u megavideourl | -c megavideocode]")
+	print("")
+	print("If you supply the megavideocode, the url will be formatted")
+	print("as %sXXXXX."%baseMegavideoUrl)
 	print("")
 
 megaVideoUrl = ""
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:], "hu:")
+	opts, args = getopt.getopt(sys.argv[1:], "hu:c:")
 except getopt.GetoptError:
 	usage()
 	sys.exit(0)
@@ -61,10 +74,12 @@ for o,a in opts:
 		sys.exit(0)
 	elif o == "-u":
 		megaVideoUrl = a
+	elif o == "-c":
+		megaVideoUrl = "%s%s"%(baseMegavideoUrl, a)
 
 if (len(megaVideoUrl) == 0):
 	usage()
-	print("You need to provide an url.\n")
+	print("You need to provide an url or a MegaVideo code.\n")
 	sys.exit(0)
 
 # -------------------------------------------------------------------------------------------
