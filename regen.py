@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import urllib, string, sys, re, getopt, socket
+import urllib, string, sys, re, getopt, socket, logging
 
 # ----------- Globals ----------------------------------------------------------------------
 
@@ -13,9 +13,26 @@ socket.setdefaulttimeout(20)
 # base MegaVideo url string
 baseMegavideoUrl = "http://www.megavideo.com/?v="
 
+# ----------- Logger --------------------------------------------------------------------------------
+
+# Logger
+log = logging.getLogger('MV Link Cleaner')
+log.setLevel(logging.CRITICAL)
+#create console handler and set level to debug
+ch = logging.StreamHandler()
+ch.setLevel(logging.CRITICAL)
+#create formatter
+formatter = logging.Formatter("%(levelname)s - %(message)s")
+#add formatter to ch
+ch.setFormatter(formatter)
+#add ch to logger
+log.addHandler(ch)
+
 # ----------- Checks if the provided URL is an available MegaVideo video -------------------
 
 def checkIfAvailableOnMV(megaVideoUrl):
+
+	log.debug("Checking link %s for existence on %s"%(megaVideoUrl, baseMegavideoUrl))
 	
 	# checks whether the video is not removed from MV
 	# 0 -> video available
@@ -28,7 +45,7 @@ def checkIfAvailableOnMV(megaVideoUrl):
 		f = urllib.urlopen(megaVideoUrl)
 		readFile = f.read()
 	except:
-		print("Unable to access MegaVideo server (maybe you are offline?)")
+		log.error("Unable to access MegaVideo server (maybe you are offline?)")
 		return -1
 	f.close()
 	
@@ -56,6 +73,10 @@ def usage():
 	print("")
 	print("Usage: regen.py [-u megavideourl | -c megavideocode]")
 	print("")
+	print("Other options:")
+	print("-d\tDebug info")
+	print("-v\tVerbose (still less thank DEBUG)")
+	print("")
 	print("If you supply the megavideocode, the url will be formatted")
 	print("as %sXXXXX."%baseMegavideoUrl)
 	print("")
@@ -63,7 +84,7 @@ def usage():
 megaVideoUrl = ""
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:], "hu:c:")
+	opts, args = getopt.getopt(sys.argv[1:], "hu:c:vd")
 except getopt.GetoptError:
 	usage()
 	sys.exit(0)
@@ -74,8 +95,15 @@ for o,a in opts:
 		sys.exit(0)
 	elif o == "-u":
 		megaVideoUrl = a
+		log.info("Supplied %s url from command line"%a)
 	elif o == "-c":
 		megaVideoUrl = "%s%s"%(baseMegavideoUrl, a)
+	elif o == "-v":
+		log.setLevel(logging.INFO)
+		ch.setLevel(logging.INFO)
+	elif o == "-d":
+		log.setLevel(logging.DEBUG)
+		ch.setLevel(logging.DEBUG)
 
 if (len(megaVideoUrl) == 0):
 	usage()
@@ -89,11 +117,12 @@ availableOnMV = checkIfAvailableOnMV(megaVideoUrl)
 if (availableOnMV == -1):
 	sys.exit(1)
 if (availableOnMV == 1):
-	print("The original MegaVideo file has been removed due to infringiment")
+	log.info("The original MegaVideo file has been removed due to infringiment")
 elif (availableOnMV == 2):
-	print("The original MegaVideo file is not available")
+	log.info("The original MegaVideo file is not available")
 else:
-	print("The url:\n-> %s\nis still available.\n"%megaVideoUrl)
+	log.info("The url: %s is still available on MegaVideo."%megaVideoUrl)
+	print("%s"%megaVideoUrl)
 	sys.exit(0)
 
 # tries to regen the link via regen.videourls.com
@@ -115,11 +144,12 @@ for regenUrl in regenUrls:
 	completeUrl = "%s%s"%(regenUrl[1], code)
 	
 	# get the regen page
+	log.debug("Opening page %s"%completeUrl)
 	try:
 		f = urllib.urlopen(completeUrl)
 		readFile = f.read()
 	except:
-		print("Unable to access server %s"%regenUrl[0])
+		log.warning("Unable to access server %s"%regenUrl[0])
 		continue
 	f.close()
 	
@@ -132,10 +162,10 @@ for regenUrl in regenUrls:
 			break
 	
 	if (found == 1):
-		print("Found nothing with %s"%regenUrl[0])
+		log.info("Found nothing with %s"%regenUrl[0])
 		continue
 	else:
-		print("Found something with %s"%regenUrl[0])
+		log.info("Found something with %s"%regenUrl[0])
 	
 	# parse the regen page
 	for line in string.split(readFile, "\n"):
@@ -145,7 +175,10 @@ for regenUrl in regenUrls:
 			m = re.search('>.*<', line)
 			line = m.group(0)
 			line = line[1:-1]
-			print("-> %s"%line)
+			log.info("Found %s on %s"%(line, regenUrl[0]))
 			newUrls.append(line)
 
-#print(newUrls)
+log.info("Found %i alternative links."%len(newUrls))
+
+for newLink in newUrls:
+	print(newLink)
