@@ -13,9 +13,10 @@ output.
 Usage: mvregen.py [-u megavideourl | -c megavideocode]
 
 Other options:
--d	Debug info
--v	Verbose (still less thank DEBUG)
--l N	Limit the output to the first N found links (>=1!)
+
+* -d	Debug info
+* -v	Verbose (still less thank DEBUG)
+* -l N	Limit the output to the first N found links (>=1!)
 
 If you supply the megavideocode, the url will be formatted
 as http://www.megavideo.com/?v=XXXXX.
@@ -31,5 +32,6 @@ exhaustive output.
 Usage: mvparse.py -u URL
 
 Other options:
--d	Debug info
--v	Verbose (still less thank DEBUG)
+
+* -d	Debug info
+* -v	Verbose (still less thank DEBUG)
