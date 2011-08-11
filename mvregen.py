@@ -104,6 +104,7 @@ def usage():
 	print("-d\tDebug info")
 	print("-v\tVerbose (still less thank DEBUG)")
 	print("-l N\tLimit the output to the first N found links (>=1!)")
+	print("-o file\tPrints results in a text file")
 	print("")
 	print("If you supply the megavideocode, the url will be formatted")
 	print("as %sXXXXX."%baseMegavideoUrl)
@@ -116,8 +117,11 @@ megaVideoUrls = []
 megaVideoUrl = ""
 inputFile = ""
 
+outputFile = ""
+outputFileData = []
+
 try:
-	opts, args = getopt.getopt(sys.argv[1:], "hu:c:vdl:f:")
+	opts, args = getopt.getopt(sys.argv[1:], "hu:c:vdl:f:o:")
 except getopt.GetoptError:
 	usage()
 	sys.exit(0)
@@ -141,6 +145,8 @@ for o,a in opts:
 		outputLimit = a
 	elif o == "-f":
 		inputFile = a
+	elif o == "-o":
+		outputFile = a
 
 if (len(megaVideoUrls) == 0 and len(inputFile) == 0):
 	usage()
@@ -181,7 +187,9 @@ for megaVideoUrl in megaVideoUrls:
 	
 	# manage comment lines 
 	if (megaVideoUrl.startswith('#')):
-		log.info("######### %s"%megaVideoUrl.lstrip('#'))
+		commentLine = "######### %s"%megaVideoUrl.lstrip('#')
+		log.info(commentLine)
+		outputFileData.append(commentLine)
 		continue
 
 	# checks whether the url is available on MegaVideo
@@ -195,6 +203,7 @@ for megaVideoUrl in megaVideoUrls:
 	else:
 		log.info("The url: %s is still available on MegaVideo."%megaVideoUrl)
 		print("%s"%megaVideoUrl)
+		outputFileData.append(megaVideoUrl)
 		continue
 	
 	# tries to regen the link via regen.videourls.com
@@ -257,3 +266,16 @@ for megaVideoUrl in megaVideoUrls:
 	
 	for newLink in newUrls[0:outputLimit]:
 		print(newLink)
+		outputFileData.append(newLink)
+
+# prints output file from output file data
+if (len(outputFile) > 0):
+	try:
+		f = open(outputFile, 'w')
+		for line in outputFileData:
+			f.write("%s\n"%line)
+		f.close()
+		log.info("Written output data on file: %s"%outputFile)
+	except:
+		log.critical('Unable to open output file %s'%outputFile)
+		sys.exit(1)
