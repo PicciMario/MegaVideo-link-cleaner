@@ -9,8 +9,10 @@ asks some regeneration databases and tries to provide alternative links.
 If called with no options it prints just the links found (so this tool
 can be used from another script). Use -d or -v for a more exhaustive
 output.
+You can also pass with the option -f a local file containg a list of
+MegaVideo URLS to check.
 
-Usage: mvregen.py [-u megavideourl | -c megavideocode]
+Usage: mvregen.py [-u megavideourl | -c megavideocode | -f inputfile]
 
 Other options:
 

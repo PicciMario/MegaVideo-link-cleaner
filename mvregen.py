@@ -83,8 +83,10 @@ def usage():
 	print("If called with no options it prints just the links found (so this tool")
 	print("can be used from another script). Use -d or -v for a more exhaustive")
 	print("output.")
+	print("You can also pass with the option -f a local file containg a list of")
+	print("MegaVideo URLS to check.")
 	print("")
-	print("Usage: mvregen.py [-u megavideourl | -c megavideocode]")
+	print("Usage: mvregen.py [-u megavideourl | -c megavideocode | -f inputfile]")
 	print("")
 	print("Other options:")
 	print("-d\tDebug info")
@@ -98,10 +100,12 @@ def usage():
 	print("out the found url(s) (or the supplied url if this is valid)")
 	print("")
 
+megaVideoUrls = []
 megaVideoUrl = ""
+inputFile = ""
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:], "hu:c:vdl:")
+	opts, args = getopt.getopt(sys.argv[1:], "hu:c:vdl:f:")
 except getopt.GetoptError:
 	usage()
 	sys.exit(0)
@@ -111,10 +115,10 @@ for o,a in opts:
 		usage()
 		sys.exit(0)
 	elif o == "-u":
-		megaVideoUrl = a
+		megaVideoUrls.append(a)
 		log.info("Supplied %s url from command line"%a)
 	elif o == "-c":
-		megaVideoUrl = "%s%s"%(baseMegavideoUrl, a)
+		megaVideoUrls.append("%s%s"%(baseMegavideoUrl, a))
 	elif o == "-v":
 		log.setLevel(logging.INFO)
 		ch.setLevel(logging.INFO)
@@ -123,10 +127,12 @@ for o,a in opts:
 		ch.setLevel(logging.DEBUG)
 	elif o == "-l":
 		outputLimit = a
+	elif o == "-f":
+		inputFile = a
 
-if (len(megaVideoUrl) == 0):
+if (len(megaVideoUrls) == 0 and len(inputFile) == 0):
 	usage()
-	print("You need to provide an url or a MegaVideo code.\n")
+	print("You need to provide an url, a MegaVideo code or an input file.\n")
 	sys.exit(0)
 
 try:
@@ -143,76 +149,96 @@ if outputLimit < 1:
 	
 # -------------------------------------------------------------------------------------------
 
-# checks whether the url is available on MegaVideo
-availableOnMV = checkIfAvailableOnMV(megaVideoUrl)
-if (availableOnMV == -1):
-	sys.exit(1)
-if (availableOnMV == 1):
-	log.info("The original MegaVideo file has been removed due to infringiment")
-elif (availableOnMV == 2):
-	log.info("The original MegaVideo file is not available")
-else:
-	log.info("The url: %s is still available on MegaVideo."%megaVideoUrl)
-	print("%s"%megaVideoUrl)
-	sys.exit(0)
-
-# tries to regen the link via regen.videourls.com
-# works only with urls in the form ?v= and not in the new form ?d=
-
-# megavideo code
-code = string.rsplit(megaVideoUrl, "=", 1)[1]
-
-# url of the regen page
-regenUrls = [
-	["regen.megastreaming.org", "http://regen.megastreaming.org/?v="],
-	["regen.videourls.com", "http://regen.videourls.com/?v="]
-]
-
-# regenerated urls
-newUrls = []
-
-for regenUrl in regenUrls:
-	completeUrl = "%s%s"%(regenUrl[1], code)
-	
-	# get the regen page
-	log.debug("Opening page %s"%completeUrl)
+# read input file
+if (len(inputFile) > 0):
 	try:
-		f = urllib.urlopen(completeUrl)
-		readFile = f.read()
+		f = open(inputFile, 'r')
+		for line in f:
+			line = line.strip().rstrip('\n')
+			# skip comments
+			if (line.startswith('#')):
+				continue	
+			# skip empty lines
+			if (len(line) == 0):
+				continue
+			megaVideoUrls.append(line)
+		f.close()
 	except:
-		log.warning("Unable to access server %s"%regenUrl[0])
+		log.critical('Unable to open input file %s'%inputFile)
+		sys.exit(1)
+		
+for megaVideoUrl in megaVideoUrls:
+
+	# checks whether the url is available on MegaVideo
+	availableOnMV = checkIfAvailableOnMV(megaVideoUrl)
+	if (availableOnMV == -1):
 		continue
-	f.close()
-	
-	# checks for error while regenerating
-	errorString = "unable to regenerate"
-	found = 0
-	for line in string.split(readFile, "\n"):
-		if string.find(line, errorString) != -1:
-			found = 1
-			break
-	
-	if (found == 1):
-		log.info("Found nothing with %s"%regenUrl[0])
-		continue
+	if (availableOnMV == 1):
+		log.info("The original MegaVideo file has been removed due to infringiment")
+	elif (availableOnMV == 2):
+		log.info("The original MegaVideo file is not available")
 	else:
-		log.info("Found something with %s"%regenUrl[0])
+		log.info("The url: %s is still available on MegaVideo."%megaVideoUrl)
+		print("%s"%megaVideoUrl)
+		continue
 	
-	# parse the regen page
-	for line in string.split(readFile, "\n"):
-		if string.find(line, "freshlink") != -1:
-			m = re.search('<a.*a>', line)
-			line = m.group(0)
-			m = re.search('>.*<', line)
-			line = m.group(0)
-			line = line[1:-1]
-			log.info("Found %s on %s"%(line, regenUrl[0]))
-			newUrls.append(line)
-
-log.info("Found %i alternative links."%len(newUrls))
-
-if (len(newUrls) > outputLimit):
-	log.info("Limiting results to first %i value(s) (see -l option)."%outputLimit)
-
-for newLink in newUrls[0:outputLimit]:
-	print(newLink)
+	# tries to regen the link via regen.videourls.com
+	# works only with urls in the form ?v= and not in the new form ?d=
+	
+	# megavideo code
+	code = string.rsplit(megaVideoUrl, "=", 1)[1]
+	
+	# url of the regen page
+	regenUrls = [
+		["regen.megastreaming.org", "http://regen.megastreaming.org/?v="],
+		["regen.videourls.com", "http://regen.videourls.com/?v="]
+	]
+	
+	# regenerated urls
+	newUrls = []
+	
+	for regenUrl in regenUrls:
+		completeUrl = "%s%s"%(regenUrl[1], code)
+		
+		# get the regen page
+		log.debug("Opening page %s"%completeUrl)
+		try:
+			f = urllib.urlopen(completeUrl)
+			readFile = f.read()
+		except:
+			log.warning("Unable to access server %s"%regenUrl[0])
+			continue
+		f.close()
+		
+		# checks for error while regenerating
+		errorString = "unable to regenerate"
+		found = 0
+		for line in string.split(readFile, "\n"):
+			if string.find(line, errorString) != -1:
+				found = 1
+				break
+		
+		if (found == 1):
+			log.info("Found nothing with %s"%regenUrl[0])
+			continue
+		else:
+			log.info("Found something with %s"%regenUrl[0])
+		
+		# parse the regen page
+		for line in string.split(readFile, "\n"):
+			if string.find(line, "freshlink") != -1:
+				m = re.search('<a.*a>', line)
+				line = m.group(0)
+				m = re.search('>.*<', line)
+				line = m.group(0)
+				line = line[1:-1]
+				log.info("Found %s on %s"%(line, regenUrl[0]))
+				newUrls.append(line)
+	
+	log.info("Found %i alternative links."%len(newUrls))
+	
+	if (len(newUrls) > outputLimit):
+		log.info("Limiting results to first %i value(s) (see -l option)."%outputLimit)
+	
+	for newLink in newUrls[0:outputLimit]:
+		print(newLink)
