@@ -161,15 +161,13 @@ if outputLimit < 1:
 	
 # -------------------------------------------------------------------------------------------
 
-# read input file
+# read input file and add elements to megaVideUrls array
+# also add # comments, will just be printed on the output
 if (len(inputFile) > 0):
 	try:
 		f = open(inputFile, 'r')
 		for line in f:
-			line = line.strip().rstrip('\n')
-			# skip comments
-			if (line.startswith('#')):
-				continue	
+			line = line.strip().rstrip('\n')	
 			# skip empty lines
 			if (len(line) == 0):
 				continue
@@ -180,6 +178,11 @@ if (len(inputFile) > 0):
 		sys.exit(1)
 		
 for megaVideoUrl in megaVideoUrls:
+	
+	# manage comment lines 
+	if (megaVideoUrl.startswith('#')):
+		log.info("######### %s"%megaVideoUrl.lstrip('#'))
+		continue
 
 	# checks whether the url is available on MegaVideo
 	availableOnMV = checkIfAvailableOnMV(megaVideoUrl)
