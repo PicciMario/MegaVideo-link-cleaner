@@ -46,25 +46,38 @@ def usage():
 	print("Released under MIT license. Enjoy!")
 	print("")
 	print("This tool accepts a valid URL and prints a list of all the MegaVideo")
-	print("links (in the form http://www.megavideo.com/?[d/v]=XXXXXXXX) found in")
-	print("the page. If called with no options it prints just the links found")
-	print("(so this tool can be used from another script). Use -d or -v for a more")
-	print("exhaustive output.")
+	print("links found in the page (see SCAN MODE later).")
+	print("If called with no options it prints just the links found (so this tool")
+	print("can be used from another script). Use -d or -v for a more exhaustive")
+	print("output.")
 	print("")
 	print("Usage: mvparse.py -u URL")
 	print("")
 	print("Other options:")
+	print("-h\tThis help")
 	print("-d\tDebug info")
 	print("-v\tVerbose (still less thank DEBUG)")
+	print("-r\tRaw scan mode")
+	print("")
+	print("SCAN MODE")
+	print("0: Default mode. Searches for links in the form") 
+	print("   <a href=\"http://www.megavideo.com/?[v/d]=XXXXXXX\">Description</a>")
+	print("   and prints an output formatted like:")
+	print("     # Description")
+	print("     http://www.megavideo.com/?[v/d]=XXXXXXX")
+	print("   This mode is useful to create input files for the mvregen tool.")
+	print("1: Raw mode. Searches for every occurrence of the regexp")
+	print("   http://www.megavideo.com/?[v/d]=XXXXXXX")
 	print("")
 	print("If you do not use v (verbose) or d (debug), the tool only prints")
 	print("out the found url(s) (or the supplied url if this is valid)")
 	print("")
 
 newURL = ""
+scanMode = 0
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:], "hu:vd")
+	opts, args = getopt.getopt(sys.argv[1:], "hu:vdr")
 except getopt.GetoptError:
 	usage()
 	sys.exit(0)
@@ -82,6 +95,8 @@ for o,a in opts:
 	elif o == "-d":
 		log.setLevel(logging.DEBUG)
 		ch.setLevel(logging.DEBUG)
+	elif o == "-r":
+		scanMode = 1
 
 if (len(newURL) == 0):
 	usage()
@@ -91,7 +106,7 @@ if (len(newURL) == 0):
 # -------------------------------------------------------------------------------------------
 
 # tries to get the original file
-log.debug("Opening page %s"%newURL)
+log.info("Opening page %s"%newURL)
 try:
 	f = urllib.urlopen(newURL)
 	readFile = f.read()
@@ -100,11 +115,45 @@ except:
 	sys.exit(1)
 f.close()
 
-# parses megavideo links
-log.debug("Searching MegaVideo-like links in the downloaded page")
-m = re.findall('http://www.megavideo.com/\?[vd]=[0-9a-zA-Z]{8}', readFile)
+# Raw scan mode
+if (scanMode == 1):
+	# parses megavideo links
+	log.debug("Searching MegaVideo-like links in the downloaded page")
+	m = re.findall('http://www.megavideo.com/\?[vd]=[0-9a-zA-Z]{8}', readFile)
+	
+	# print results
+	log.info("Found %i links in the page."%len(m))
+	for line in m:
+		print line
 
-# print results
-log.info("Found %i links in the page."%len(m))
-for line in m:
-	print line
+# Normal scan mode
+elif (scanMode == 0):
+	# search for generic links
+	log.debug("Searching all links in the downloaded page")
+	m = re.findall('<a[^<]*</a>', readFile)
+	
+	# search megavideo links
+	log.debug("Searching MegaVideo Links in the form <a href=\"http://www.megavideo.com/?v/d=XXXXXXXX\">text</a>")
+	mvlinks = []
+	pattern = re.compile('http://www.megavideo.com/\?[vd]=[0-9a-zA-Z]{8}')
+	for line in m:
+		if (pattern.search(line) != None):
+			mvlinks.append(line)
+	
+	log.info("Found %i MegaVideo Links in the form <a href=\"http://www.megavideo.com/?v/d=XXXXXXXX\">text</a>"%len(mvlinks))
+	
+	# parse megavideo links for url and description
+	for link in mvlinks:
+		
+		linkUrl = ""
+		linkDesc = ""
+		
+		linkFound = re.search('(?<=href=")[^"]*', link)
+		if (linkFound != None):
+			linkUrl = linkFound.group(0)
+		
+		descFound = re.search('(?<=>)[^<]*', link)
+		if (descFound != None):
+			linkDesc = descFound.group(0)		
+		
+		print("# %s\n%s"%(linkDesc, linkUrl))
