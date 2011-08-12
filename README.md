@@ -34,14 +34,25 @@ as http://www.megavideo.com/?v=XXXXX.
 # Megavideo URL Parser
 
 This tool accepts a valid URL and prints a list of all the MegaVideo
-links (in the form http://www.megavideo.com/?[d/v]=XXXXXXXX) found in
-the page. If called with no options it prints just the links found
-(so this tool can be used from another script). Use -d or -v for a more
-exhaustive output.
+links found in the page (see SCAN MODE later).
+If called with no options it prints just the links found (so this tool
+can be used from another script). Use -d or -v for a more exhaustive
+output.
 
 Usage: mvparse.py -u URL
 
 Other options:
+-h	This help
+-d	Debug info
+-v	Verbose (still less thank DEBUG)
+-r	Raw scan mode
 
-* -d	Debug info
-* -v	Verbose (still less thank DEBUG)
+SCAN MODE
+0: Default mode. Searches for links in the form
+   <a href="http://www.megavideo.com/?[v/d]=XXXXXXX">Description</a>
+   and prints an output formatted like:
+     # Description
+     http://www.megavideo.com/?[v/d]=XXXXXXX
+   This mode is useful to create input files for the mvregen tool.
+1: Raw mode. Searches for every occurrence of the regexp
+   http://www.megavideo.com/?[v/d]=XXXXXXX
