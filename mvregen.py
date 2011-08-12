@@ -101,10 +101,12 @@ def usage():
 	print("Usage: mvregen.py [-u megavideourl | -c megavideocode | -f inputfile]")
 	print("")
 	print("Other options:")
+	print("-h\tThis help")
 	print("-d\tDebug info")
 	print("-v\tVerbose (still less thank DEBUG)")
 	print("-l N\tLimit the output to the first N found links (>=1!)")
 	print("-o file\tPrints results in a text file")
+	print("-t\tPrints the output file in HTML format")
 	print("")
 	print("If you pass an output file with the option -o, in that file at the end")
 	print("of the process will be written the URLS (can be limited with the -l")
@@ -123,9 +125,10 @@ inputFile = ""
 
 outputFile = ""
 outputFileData = []
+htmlOutput = 0
 
 try:
-	opts, args = getopt.getopt(sys.argv[1:], "hu:c:vdl:f:o:")
+	opts, args = getopt.getopt(sys.argv[1:], "hu:c:vdl:f:o:t")
 except getopt.GetoptError:
 	usage()
 	sys.exit(0)
@@ -151,6 +154,8 @@ for o,a in opts:
 		inputFile = a
 	elif o == "-o":
 		outputFile = a
+	elif o == "-t":
+		htmlOutput = 1
 
 if (len(megaVideoUrls) == 0 and len(inputFile) == 0):
 	usage()
@@ -267,9 +272,9 @@ for megaVideoUrl in megaVideoUrls:
 				m = re.search('>.*<', line)
 				line = m.group(0)
 				line = line[1:-1]
-				log.info("Found %s on %s"%(line, regenUrl[0]))
+				log.debug("Found %s on %s"%(line, regenUrl[0]))
 				newUrls.append(line)
-	
+		
 	log.info("Found %i alternative links."%len(newUrls))
 	
 	if (len(newUrls) > outputLimit):
@@ -283,8 +288,28 @@ for megaVideoUrl in megaVideoUrls:
 if (len(outputFile) > 0):
 	try:
 		f = open(outputFile, 'w')
-		for line in outputFileData:
-			f.write("%s\n"%line)
+		
+		# normal output (text file)
+		if (htmlOutput == 0):
+			for line in outputFileData:
+				f.write("%s\n"%line)
+		
+		# html output
+		else:
+			f.write("<html><head><title>MegaVideo Link Cleaner - results page</title></head><body>")
+			f.write("<div style=\"background-color:lightblue; padding:5px; border: 1px solid blue\">")
+			f.write("<b><font size=+1>MegaVideo Link Cleaner</font></b><br>")
+			f.write("Copyright (c) 2011 PicciMario (<i>mario.piccinelli@gmail.com</i>)<br>")
+			f.write("Download latest version <a href=\"https://github.com/PicciMario/MegaVideo-link-cleaner\">here</a><br>")
+			f.write("Input file: <b>%s</b></div>"%inputFile)
+
+			for line in outputFileData:
+				if (line.startswith('#')):
+					f.write("<hr>\n<font color=darkgreen>%s</font>\n<br>\n"%line)
+				else:
+					f.write("<a href=\"%s\">%s</a>\n<br>\n"%(line, line))
+			f.write("</body></html>")
+			
 		f.close()
 		log.info("Written output data on file: %s"%outputFile)
 	except:

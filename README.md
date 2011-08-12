@@ -17,10 +17,12 @@ Usage: mvregen.py [-u megavideourl | -c megavideocode | -f inputfile]
 
 Other options:
 
+* -h	This help
 * -d	    Debug info
 * -v	    Verbose (still less thank DEBUG)
 * -l N	    Limit the output to the first N found links (>=1!)
 * -o file	Prints results in a text file
+* -t	Prints the output file in HTML format
 
 If you pass an output file with the option -o, in that file at the end
 of the process will be written the URLS (can be limited with the -l
