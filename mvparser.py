@@ -37,6 +37,16 @@ ch.setFormatter(formatter)
 #add ch to logger
 log.addHandler(ch)
 
+# ----------- Unescaping HTML chars ---------------------------------------------------------------
+
+import htmllib
+
+def unescape(s):
+    p = htmllib.HTMLParser(None)
+    p.save_bgn()
+    p.feed(s)
+    return p.save_end()
+
 # ----------- Command Line Parameters ---------------------------------------------------------------
 
 def usage():
@@ -154,8 +164,9 @@ elif (scanMode == 0):
 		
 		descFound = re.findall('(?<=>)[^<]*', link)
 		for line in descFound:
-			if (len(line) > 0):
-				linkDesc = line
+			if (len(line.strip()) > 0):
+				linkDesc = unescape(line)
 				continue
 		
+		#print("Original: %s"%link)
 		print("# %s\n%s"%(linkDesc, linkUrl))
