@@ -130,7 +130,7 @@ if (scanMode == 1):
 elif (scanMode == 0):
 	# search for generic links
 	log.debug("Searching all links in the downloaded page")
-	m = re.findall('<a[^<]*</a>', readFile)
+	m = re.findall('<a.*?</a>', readFile)
 	
 	# search megavideo links
 	log.debug("Searching MegaVideo Links in the form <a href=\"http://www.megavideo.com/?v/d=XXXXXXXX\">text</a>")
@@ -152,8 +152,10 @@ elif (scanMode == 0):
 		if (linkFound != None):
 			linkUrl = linkFound.group(0)
 		
-		descFound = re.search('(?<=>)[^<]*', link)
-		if (descFound != None):
-			linkDesc = descFound.group(0)		
+		descFound = re.findall('(?<=>)[^<]*', link)
+		for line in descFound:
+			if (len(line) > 0):
+				linkDesc = line
+				continue
 		
 		print("# %s\n%s"%(linkDesc, linkUrl))
