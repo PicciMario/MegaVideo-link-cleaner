@@ -212,6 +212,13 @@ for megaVideoUrl in megaVideoUrls:
 	
 	# tries to regen the link via regen.videourls.com
 	# works only with urls in the form ?v= and not in the new form ?d=
+	# nb: ?d= urls are about videos uploaded by MegaUpload
+	
+	# if ?d= then warn the user and skip the regen part
+	megaUploadLinkFound = re.findall('http://www.megavideo.com/\?d=[0-9a-zA-Z]{8}', megaVideoUrl)
+	if (len(megaUploadLinkFound) > 0):
+		log.warning("The link %s is in MegaUpload format, can't be regenerated. Skipping..."%megaVideoUrl)
+		continue
 	
 	# megavideo code
 	code = string.rsplit(megaVideoUrl, "=", 1)[1]
