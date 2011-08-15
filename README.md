@@ -59,5 +59,6 @@ SCAN MODE
    http://www.megavideo.com/?[v/d]=XXXXXXX
    
    This mode is useful to create input files for the mvregen tool.
+
 * 1: Raw mode. Searches for every occurrence of the regexp
    http://www.megavideo.com/?[v/d]=XXXXXXX
