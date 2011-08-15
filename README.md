@@ -49,11 +49,12 @@ Other options:
 * -r	Raw scan mode
 
 SCAN MODE
-0: Default mode. Searches for links in the form
+
+* 0: Default mode. Searches for links in the form
    <a href="http://www.megavideo.com/?[v/d]=XXXXXXX">Description</a>
    and prints an output formatted like:
      # Description
      http://www.megavideo.com/?[v/d]=XXXXXXX
    This mode is useful to create input files for the mvregen tool.
-1: Raw mode. Searches for every occurrence of the regexp
+* 1: Raw mode. Searches for every occurrence of the regexp
    http://www.megavideo.com/?[v/d]=XXXXXXX
