@@ -42,10 +42,11 @@ output.
 Usage: mvparse.py -u URL
 
 Other options:
--h	This help
--d	Debug info
--v	Verbose (still less thank DEBUG)
--r	Raw scan mode
+
+* -h	This help
+* -d	Debug info
+* -v	Verbose (still less thank DEBUG)
+* -r	Raw scan mode
 
 SCAN MODE
 0: Default mode. Searches for links in the form
